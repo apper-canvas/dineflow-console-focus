@@ -20,6 +20,9 @@ const MainFeature = () => {
     { id: 5, number: 5, capacity: 8, status: 'available', currentOrder: null },
     { id: 6, number: 6, capacity: 2, status: 'occupied', currentOrder: 'ORD-002' },
   ]);
+  const [showAddTableModal, setShowAddTableModal] = useState(false);
+  const [newTableData, setNewTableData] = useState({ number: '', capacity: 4 });
+
   const [selectedTable, setSelectedTable] = useState(null);
   const [menuItems] = useState([
     { id: 1, name: 'Margherita Pizza', category: 'Pizza', price: 18.99, image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300&h=200&fit=crop&crop=center' },
@@ -131,6 +134,51 @@ const MainFeature = () => {
       case 'critical': return 'text-red-600 bg-red-100';
       default: return 'text-gray-600 bg-gray-100';
     }
+
+  const addNewTable = () => {
+    if (!newTableData.number || newTableData.number <= 0) {
+      toast.error('Please enter a valid table number!');
+      return;
+    }
+    
+    if (tables.some(table => table.number === parseInt(newTableData.number))) {
+      toast.error('Table number already exists!');
+      return;
+    }
+    
+    if (!newTableData.capacity || newTableData.capacity <= 0) {
+      toast.error('Please enter a valid capacity!');
+      return;
+    }
+    
+    const newTable = {
+      id: Math.max(...tables.map(t => t.id)) + 1,
+      number: parseInt(newTableData.number),
+      capacity: parseInt(newTableData.capacity),
+      status: 'available',
+      currentOrder: null
+    };
+    
+    setTables([...tables, newTable]);
+    setNewTableData({ number: '', capacity: 4 });
+    setShowAddTableModal(false);
+    
+    toast.success(`Table ${newTable.number} added successfully!`, {
+      icon: '✅',
+      autoClose: 3000
+    });
+  };
+
+  const openAddTableModal = () => {
+    setNewTableData({ number: '', capacity: 4 });
+    setShowAddTableModal(true);
+  };
+
+  const closeAddTableModal = () => {
+    setShowAddTableModal(false);
+    setNewTableData({ number: '', capacity: 4 });
+  };
+
   };
 
   return (
@@ -242,6 +290,16 @@ const MainFeature = () => {
                       </div>
                     </button>
                   ))}
+                <button
+                  onClick={openAddTableModal}
+                  className="col-span-3 p-3 rounded-lg border-2 border-dashed border-primary/50 hover:border-primary transition-all duration-300 bg-primary/5 hover:bg-primary/10 group"
+                >
+                  <div className="flex items-center justify-center space-x-2 text-primary">
+                    <ApperIcon name="Plus" className="w-5 h-5" />
+                    <span className="text-sm font-medium">Add Table</span>
+                  </div>
+                </button>
+
                 </div>
               </div>
 
@@ -462,6 +520,86 @@ const MainFeature = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Add Table Modal */}
+      <AnimatePresence>
+        {showAddTableModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={closeAddTableModal}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="glass-effect rounded-2xl p-6 w-full max-w-md shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-surface-900 dark:text-surface-100 flex items-center">
+                  <ApperIcon name="Plus" className="w-6 h-6 mr-3 text-primary" />
+                  Add New Table
+                </h3>
+                <button
+                  onClick={closeAddTableModal}
+                  className="w-8 h-8 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
+                >
+                  <ApperIcon name="X" className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                    Table Number
+                  </label>
+                  <input
+                    type="number"
+                    value={newTableData.number}
+                    onChange={(e) => setNewTableData({ ...newTableData, number: e.target.value })}
+                    className="w-full py-3 px-4 bg-surface-100 dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter table number"
+                    min="1"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                    Seating Capacity
+                  </label>
+                  <input
+                    type="number"
+                    value={newTableData.capacity}
+                    onChange={(e) => setNewTableData({ ...newTableData, capacity: e.target.value })}
+                    className="w-full py-3 px-4 bg-surface-100 dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter seating capacity"
+                    min="1"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex space-x-3 mt-6">
+                <button
+                  onClick={closeAddTableModal}
+                  className="flex-1 py-3 px-4 bg-surface-200 dark:bg-surface-700 text-surface-700 dark:text-surface-300 rounded-xl font-medium hover:bg-surface-300 dark:hover:bg-surface-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={addNewTable}
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-medium hover:shadow-glow transition-all duration-300"
+                >
+                  Add Table
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };
