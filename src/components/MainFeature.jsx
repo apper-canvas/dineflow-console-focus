@@ -250,7 +250,8 @@ const MainFeature = () => {
                       </p>
                       <div className="flex items-center justify-between">
                         <span className="text-lg font-bold text-primary">
-                          ${item.price}
+                          ₹{item.price}
+
                         </span>
                         <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                           <ApperIcon name="Plus" className="w-4 h-4 text-white" />
@@ -323,7 +324,8 @@ const MainFeature = () => {
                             {item.name}
                           </h4>
                           <p className="text-primary font-semibold text-sm">
-                            ${item.price}
+                            ₹{item.price}
+
                           </p>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -352,7 +354,8 @@ const MainFeature = () => {
                   <div className="mt-4 pt-4 border-t border-surface-200 dark:border-surface-600">
                     <div className="flex justify-between items-center mb-4">
                       <span className="text-lg font-bold text-surface-900 dark:text-surface-100">Total:</span>
-                      <span className="text-xl font-bold text-primary">${getTotalAmount().toFixed(2)}</span>
+                      <span className="text-xl font-bold text-primary">₹{getTotalAmount().toFixed(2)}</span>
+
                     </div>
                     <button
                       onClick={processOrder}
