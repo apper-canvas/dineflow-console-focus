@@ -23,6 +23,8 @@ const MainFeature = () => {
   const [showAddTableModal, setShowAddTableModal] = useState(false);
   const [newTableData, setNewTableData] = useState({ number: '', capacity: 4 });
 
+  const [tableBillingHistory, setTableBillingHistory] = useState(new Map()); // Track billing count per table
+
   const [openTables, setOpenTables] = useState(new Map()); // Map of table ID to { table, cart, isMinimized }
 
   const [menuItems, setMenuItems] = useState([
@@ -184,17 +186,32 @@ const MainFeature = () => {
       return;
     }
     
+    // Update billing history
+    setTableBillingHistory(prev => {
+      const newHistory = new Map(prev);
+      const currentCount = newHistory.get(tableId) || 0;
+      newHistory.set(tableId, currentCount + 1);
+      return newHistory;
+    });
+    
+    // Close the table window
     setOpenTables(prev => {
       const newOpenTables = new Map(prev);
       newOpenTables.delete(tableId);
       return newOpenTables;
     });
     
-    toast.success(`Order processed successfully for Table ${tableData.table.number}!`, {
+    // Update table status back to available
+    setTables(tables.map(table =>
+      table.id === tableId ? { ...table, status: 'available', currentOrder: null } : table
+    ));
+    
+    toast.success(`Order processed successfully for Table ${tableData.table.number}! Total amount: ₹${getTotalAmountForTable(tableId).toFixed(2)}`, {
       icon: '✅',
       autoClose: 3000
     });
   };
+
 
   const closeTableWindow = (tableId) => {
     const tableData = openTables.get(tableId);
@@ -849,11 +866,17 @@ const MainFeature = () => {
                         {table.status}
                       </div>
                       
+                      {/* Billing History Display */}
+                      <div className="text-xs text-primary font-medium mb-3">
+                        Billed: {tableBillingHistory.get(table.id) || 0} times
+                      </div>
+                      
                       {table.currentOrder && (
                         <div className="text-xs text-primary font-medium mb-3">
                           {table.currentOrder}
                         </div>
                       )}
+
                       
                       <select
                         value={table.status}
