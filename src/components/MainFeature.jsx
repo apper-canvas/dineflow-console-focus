@@ -691,8 +691,8 @@ const MainFeature = () => {
                                 key={item.id}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className="gradient-border rounded-xl p-4 cursor-pointer group"
-                                onClick={() => addToCartForTable(tableId, item)}
+                                className="gradient-border rounded-xl p-4 group relative"
+
                               >
                                 <div className="aspect-w-16 aspect-h-10 mb-3">
                                   <img
@@ -730,9 +730,13 @@ const MainFeature = () => {
                                     >
                                       <ApperIcon name="Edit" className="w-4 h-4 text-white" />
                                     </button>
-                                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <button
+                                      onClick={() => addToCartForTable(tableId, item)}
+                                      className="w-8 h-8 bg-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:shadow-glow"
+                                    >
                                       <ApperIcon name="Plus" className="w-4 h-4 text-white" />
-                                    </div>
+                                    </button>
+
                                   </div>
                                 </div>
                               </motion.div>
