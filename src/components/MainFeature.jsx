@@ -61,6 +61,11 @@ const MainFeature = () => {
   ];
 
   const addToCart = (item) => {
+    if (!selectedTable) {
+      toast.error('Please select a table first!');
+      return;
+    }
+    
     const existingItem = cart.find(cartItem => cartItem.id === item.id);
     if (existingItem) {
       setCart(cart.map(cartItem =>
@@ -76,6 +81,7 @@ const MainFeature = () => {
       autoClose: 2000
     });
   };
+
 
   const removeFromCart = (itemId) => {
     const item = cart.find(cartItem => cartItem.id === itemId);
@@ -237,10 +243,15 @@ const MainFeature = () => {
   };
 
   const openAddMenuModal = () => {
+    if (!selectedTable) {
+      toast.error('Please select a table first!');
+      return;
+    }
+    
     setNewMenuData({ name: '', category: '', price: '', image: null, imagePreview: '' });
-
     setShowAddMenuModal(true);
   };
+
 
   const closeAddMenuModal = () => {
     setShowAddMenuModal(false);
