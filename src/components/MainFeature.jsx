@@ -134,6 +134,8 @@ const MainFeature = () => {
       case 'critical': return 'text-red-600 bg-red-100';
       default: return 'text-gray-600 bg-gray-100';
     }
+  };
+
 
   const addNewTable = () => {
     if (!newTableData.number || newTableData.number <= 0) {
@@ -179,7 +181,6 @@ const MainFeature = () => {
     setNewTableData({ number: '', capacity: 4 });
   };
 
-  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
