@@ -70,8 +70,17 @@ const MainFeature = () => {
     setOpenTables(prev => {
       const newOpenTables = new Map(prev);
       if (newOpenTables.has(table.id)) {
-        // Toggle minimize/maximize
+        // Check if trying to minimize a table with empty cart
         const tableData = newOpenTables.get(table.id);
+        if (!tableData.isMinimized && tableData.cart.length === 0) {
+          toast.error('Cannot move table to running state without any orders!', {
+            icon: '⚠️',
+            autoClose: 3000
+          });
+          return prev;
+        }
+        
+        // Toggle minimize/maximize
         newOpenTables.set(table.id, {
           ...tableData,
           isMinimized: !tableData.isMinimized
@@ -91,6 +100,7 @@ const MainFeature = () => {
       return newOpenTables;
     });
   };
+
 
   const addToCartForTable = (tableId, item) => {
     setOpenTables(prev => {
