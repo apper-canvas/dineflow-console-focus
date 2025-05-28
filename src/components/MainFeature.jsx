@@ -43,6 +43,10 @@ const MainFeature = () => {
     price: '', 
     image: '' 
   });
+  const [editingImageItem, setEditingImageItem] = useState(null);
+  const [showEditImageModal, setShowEditImageModal] = useState(false);
+  const [editImageData, setEditImageData] = useState({ image: '' });
+
 
 
 
@@ -278,6 +282,47 @@ const MainFeature = () => {
   };
 
 
+  const openEditImageModal = (item) => {
+    setEditingImageItem(item);
+    setEditImageData({ image: item.image });
+    setShowEditImageModal(true);
+  };
+
+  const closeEditImageModal = () => {
+    setShowEditImageModal(false);
+    setEditingImageItem(null);
+    setEditImageData({ image: '' });
+  };
+
+  const updateMenuItemImage = () => {
+    if (!editImageData.image.trim()) {
+      toast.error('Please enter a valid image URL!');
+      return;
+    }
+    
+    // Basic URL validation
+    try {
+      new URL(editImageData.image);
+    } catch {
+      toast.error('Please enter a valid URL!');
+      return;
+    }
+    
+    setMenuItems(menuItems.map(item =>
+      item.id === editingImageItem.id
+        ? { ...item, image: editImageData.image.trim() }
+        : item
+    ));
+    
+    closeEditImageModal();
+    
+    toast.success(`Updated image for ${editingImageItem.name}`, {
+      icon: '🖼️',
+      autoClose: 3000
+    });
+  };
+
+
 
 
   return (
@@ -364,6 +409,15 @@ const MainFeature = () => {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              openEditImageModal(item);
+                            }}
+                            className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-blue-600"
+                          >
+                            <ApperIcon name="Image" className="w-4 h-4 text-white" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
                               openEditPriceModal(item);
                             }}
                             className="w-8 h-8 bg-accent rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-accent/80"
@@ -374,6 +428,7 @@ const MainFeature = () => {
                             <ApperIcon name="Plus" className="w-4 h-4 text-white" />
                           </div>
                         </div>
+
                       </div>
 
                     </motion.div>
@@ -916,6 +971,113 @@ const MainFeature = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Edit Image Modal */}
+      <AnimatePresence>
+        {showEditImageModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={closeEditImageModal}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="glass-effect rounded-2xl p-6 w-full max-w-md shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-surface-900 dark:text-surface-100 flex items-center">
+                  <ApperIcon name="Image" className="w-6 h-6 mr-3 text-primary" />
+                  Edit Image
+                </h3>
+                <button
+                  onClick={closeEditImageModal}
+                  className="w-8 h-8 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
+                >
+                  <ApperIcon name="X" className="w-4 h-4" />
+                </button>
+              </div>
+              
+              {editingImageItem && (
+                <div className="mb-4">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <img
+                      src={editingImageItem.image}
+                      alt={editingImageItem.name}
+                      className="w-16 h-16 object-cover rounded-lg"
+                    />
+                    <div>
+                      <h4 className="font-semibold text-surface-900 dark:text-surface-100">
+                        {editingImageItem.name}
+                      </h4>
+                      <p className="text-sm text-surface-600 dark:text-surface-400">
+                        {editingImageItem.category}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                    New Image URL
+                  </label>
+                  <input
+                    type="url"
+                    value={editImageData.image}
+                    onChange={(e) => setEditImageData({ ...editImageData, image: e.target.value })}
+                    className="w-full py-3 px-4 bg-surface-100 dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter new image URL"
+                  />
+                </div>
+                
+                {editImageData.image && (
+                  <div>
+                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                      Preview
+                    </label>
+                    <div className="w-full h-32 bg-surface-100 dark:bg-surface-700 rounded-lg overflow-hidden">
+                      <img
+                        src={editImageData.image}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                      <div className="w-full h-full flex items-center justify-center text-surface-500 dark:text-surface-400 text-sm" style={{ display: 'none' }}>
+                        Invalid image URL
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex space-x-3 mt-6">
+                <button
+                  onClick={closeEditImageModal}
+                  className="flex-1 py-3 px-4 bg-surface-200 dark:bg-surface-700 text-surface-700 dark:text-surface-300 rounded-xl font-medium hover:bg-surface-300 dark:hover:bg-surface-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={updateMenuItemImage}
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-medium hover:shadow-glow transition-all duration-300"
+                >
+                  Update Image
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
 
 
