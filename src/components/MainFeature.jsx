@@ -21,6 +21,9 @@ const MainFeature = () => {
     { id: 6, number: 6, capacity: 2, status: 'occupied', currentOrder: 'ORD-002' },
   ]);
   const [showAddTableModal, setShowAddTableModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [tableToDelete, setTableToDelete] = useState(null);
+
   const [newTableData, setNewTableData] = useState({ number: '', capacity: 4 });
 
   const [tableBillingHistory, setTableBillingHistory] = useState(new Map()); // Track billing count per table
@@ -312,6 +315,56 @@ const MainFeature = () => {
     setNewTableData({ number: '', capacity: 4 });
   };
 
+
+  const deleteTable = (tableId) => {
+    const table = tables.find(t => t.id === tableId);
+    if (!table) {
+      toast.error('Table not found!');
+      return;
+    }
+    
+    // Check if table is currently in use
+    if (openTables.has(tableId)) {
+      toast.error('Cannot delete table that is currently in use!');
+      return;
+    }
+    
+    if (table.status === 'occupied') {
+      toast.error('Cannot delete occupied table!');
+      return;
+    }
+    
+    // Remove table from tables array
+    setTables(tables.filter(t => t.id !== tableId));
+    
+    // Clean up billing history
+    setTableBillingHistory(prev => {
+      const newHistory = new Map(prev);
+      newHistory.delete(tableId);
+      return newHistory;
+    });
+    
+    // Close delete confirmation modal
+    setShowDeleteConfirmModal(false);
+    setTableToDelete(null);
+    
+    toast.success(`Table ${table.number} deleted successfully!`, {
+      icon: '🗑️',
+      autoClose: 3000
+    });
+  };
+
+  const openDeleteConfirmModal = (table) => {
+    setTableToDelete(table);
+    setShowDeleteConfirmModal(true);
+  };
+
+  const closeDeleteConfirmModal = () => {
+    setShowDeleteConfirmModal(false);
+    setTableToDelete(null);
+  };
+
+
   const openEditPriceModal = (item) => {
     setEditingPriceItem(item);
     setEditPriceData({ price: item.price.toString() });
@@ -356,6 +409,8 @@ const MainFeature = () => {
   const closeAddMenuModal = () => {
     setShowAddMenuModal(false);
     setNewMenuData({ name: '', category: '', price: '', image: null, imagePreview: '' });
+
+  };
 
   };
 
@@ -411,6 +466,8 @@ const MainFeature = () => {
     setShowEditImageModal(false);
     setEditingImageItem(null);
     setEditImageData({ image: null, imagePreview: '' });
+
+  };
 
   };
 
@@ -543,8 +600,20 @@ const MainFeature = () => {
                         </div>
                       )}
                     </div>
+                    {/* Delete button for POS select table section */}
+                    {!openTables.has(table.id) && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDeleteConfirmModal(table);
+                        }}
+                        className="absolute top-1 left-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-red-600"
+                      >
+                        <ApperIcon name="X" className="w-3 h-3 text-white" />
+                      </button>
+                    )}
+
                   </button>
-                ))}
                 <button
                   onClick={openAddTableModal}
                   className="col-span-3 sm:col-span-4 md:col-span-6 p-3 rounded-lg border-2 border-dashed border-primary/50 hover:border-primary transition-all duration-300 bg-primary/5 hover:bg-primary/10 group"
@@ -734,7 +803,6 @@ const MainFeature = () => {
           </motion.div>
         )}
 
-        )}
 
         {activeTab === 'inventory' && (
           <motion.div
@@ -888,6 +956,18 @@ const MainFeature = () => {
                         <option value="reserved">Reserved</option>
                         <option value="cleaning">Cleaning</option>
                       </select>
+                      
+                      {/* Delete Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDeleteConfirmModal(table);
+                        }}
+                        className="absolute top-2 left-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-red-600"
+                      >
+                        <ApperIcon name="Trash2" className="w-3 h-3 text-white" />
+                      </button>
+
                     </div>
                   </motion.div>
                 ))}
@@ -1265,7 +1345,6 @@ const MainFeature = () => {
                   </div>
                 </div>
 
-                </div>
 
               
               <div className="flex space-x-3 mt-6">
@@ -1280,6 +1359,81 @@ const MainFeature = () => {
                   className="flex-1 py-3 px-4 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-medium hover:shadow-glow transition-all duration-300"
                 >
                   Update Image
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteConfirmModal && tableToDelete && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={closeDeleteConfirmModal}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="glass-effect rounded-2xl p-6 w-full max-w-md shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-surface-900 dark:text-surface-100 flex items-center">
+                  <ApperIcon name="AlertTriangle" className="w-6 h-6 mr-3 text-red-500" />
+                  Delete Table
+                </h3>
+                <button
+                  onClick={closeDeleteConfirmModal}
+                  className="w-8 h-8 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
+                >
+                  <ApperIcon name="X" className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <div className="mb-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                    <ApperIcon name="Users" className="w-6 h-6 text-red-600 dark:text-red-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-surface-900 dark:text-surface-100">
+                      Table {tableToDelete.number}
+                    </h4>
+                    <p className="text-sm text-surface-600 dark:text-surface-400">
+                      {tableToDelete.capacity} seats • Status: {tableToDelete.status}
+                    </p>
+                    <p className="text-sm text-surface-600 dark:text-surface-400">
+                      Billed: {tableBillingHistory.get(tableToDelete.id) || 0} times
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                  <p className="text-sm text-red-800 dark:text-red-200">
+                    <strong>Warning:</strong> This action cannot be undone. Are you sure you want to delete this table? All billing history for this table will be permanently lost.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex space-x-3">
+                <button
+                  onClick={closeDeleteConfirmModal}
+                  className="flex-1 py-3 px-4 bg-surface-200 dark:bg-surface-700 text-surface-700 dark:text-surface-300 rounded-xl font-medium hover:bg-surface-300 dark:hover:bg-surface-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => deleteTable(tableToDelete.id)}
+                  className="flex-1 py-3 px-4 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors"
+                >
+                  Delete Table
                 </button>
               </div>
             </motion.div>
