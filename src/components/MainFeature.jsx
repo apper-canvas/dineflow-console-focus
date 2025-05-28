@@ -36,6 +36,14 @@ const MainFeature = () => {
   const [editingPriceItem, setEditingPriceItem] = useState(null);
   const [showEditPriceModal, setShowEditPriceModal] = useState(false);
   const [editPriceData, setEditPriceData] = useState({ price: '' });
+  const [showAddMenuModal, setShowAddMenuModal] = useState(false);
+  const [newMenuData, setNewMenuData] = useState({ 
+    name: '', 
+    category: '', 
+    price: '', 
+    image: '' 
+  });
+
 
 
 
@@ -221,6 +229,55 @@ const MainFeature = () => {
     });
   };
 
+  const openAddMenuModal = () => {
+    setNewMenuData({ name: '', category: '', price: '', image: '' });
+    setShowAddMenuModal(true);
+  };
+
+  const closeAddMenuModal = () => {
+    setShowAddMenuModal(false);
+    setNewMenuData({ name: '', category: '', price: '', image: '' });
+  };
+
+  const addNewMenuItem = () => {
+    if (!newMenuData.name.trim()) {
+      toast.error('Please enter a menu item name!');
+      return;
+    }
+    
+    if (!newMenuData.category.trim()) {
+      toast.error('Please enter a category!');
+      return;
+    }
+    
+    if (!newMenuData.price || parseFloat(newMenuData.price) <= 0) {
+      toast.error('Please enter a valid price!');
+      return;
+    }
+    
+    if (!newMenuData.image.trim()) {
+      toast.error('Please enter an image URL!');
+      return;
+    }
+    
+    const newMenuItem = {
+      id: Math.max(...menuItems.map(item => item.id)) + 1,
+      name: newMenuData.name.trim(),
+      category: newMenuData.category.trim(),
+      price: parseFloat(newMenuData.price),
+      image: newMenuData.image.trim()
+    };
+    
+    setMenuItems([...menuItems, newMenuItem]);
+    closeAddMenuModal();
+    
+    toast.success(`Added ${newMenuItem.name} to menu!`, {
+      icon: '🍽️',
+      autoClose: 3000
+    });
+  };
+
+
 
 
   return (
@@ -263,10 +320,20 @@ const MainFeature = () => {
             {/* Menu Items */}
             <div className="lg:col-span-2">
               <div className="glass-effect rounded-2xl p-6 shadow-soft">
-                <h2 className="text-xl sm:text-2xl font-bold text-surface-900 dark:text-surface-100 mb-6 flex items-center">
-                  <ApperIcon name="MenuBook" className="w-6 h-6 mr-3 text-primary" />
-                  Menu Items
-                </h2>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl sm:text-2xl font-bold text-surface-900 dark:text-surface-100 flex items-center">
+                    <ApperIcon name="MenuBook" className="w-6 h-6 mr-3 text-primary" />
+                    Menu Items
+                  </h2>
+                  <button
+                    onClick={openAddMenuModal}
+                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-primary to-accent text-white rounded-xl hover:shadow-glow transition-all duration-300"
+                  >
+                    <ApperIcon name="Plus" className="w-4 h-4" />
+                    <span className="text-sm font-medium">Add Menu Item</span>
+                  </button>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                   {menuItems.map((item) => (
                     <motion.div
@@ -744,6 +811,112 @@ const MainFeature = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Add Menu Item Modal */}
+      <AnimatePresence>
+        {showAddMenuModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={closeAddMenuModal}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="glass-effect rounded-2xl p-6 w-full max-w-md shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-surface-900 dark:text-surface-100 flex items-center">
+                  <ApperIcon name="Plus" className="w-6 h-6 mr-3 text-primary" />
+                  Add Menu Item
+                </h3>
+                <button
+                  onClick={closeAddMenuModal}
+                  className="w-8 h-8 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
+                >
+                  <ApperIcon name="X" className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                    Item Name
+                  </label>
+                  <input
+                    type="text"
+                    value={newMenuData.name}
+                    onChange={(e) => setNewMenuData({ ...newMenuData, name: e.target.value })}
+                    className="w-full py-3 px-4 bg-surface-100 dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter item name"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                    Category
+                  </label>
+                  <input
+                    type="text"
+                    value={newMenuData.category}
+                    onChange={(e) => setNewMenuData({ ...newMenuData, category: e.target.value })}
+                    className="w-full py-3 px-4 bg-surface-100 dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter category (e.g., Pizza, Salads)"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                    Price (₹)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={newMenuData.price}
+                    onChange={(e) => setNewMenuData({ ...newMenuData, price: e.target.value })}
+                    className="w-full py-3 px-4 bg-surface-100 dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter price"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                    Image URL
+                  </label>
+                  <input
+                    type="url"
+                    value={newMenuData.image}
+                    onChange={(e) => setNewMenuData({ ...newMenuData, image: e.target.value })}
+                    className="w-full py-3 px-4 bg-surface-100 dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter image URL"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex space-x-3 mt-6">
+                <button
+                  onClick={closeAddMenuModal}
+                  className="flex-1 py-3 px-4 bg-surface-200 dark:bg-surface-700 text-surface-700 dark:text-surface-300 rounded-xl font-medium hover:bg-surface-300 dark:hover:bg-surface-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={addNewMenuItem}
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-medium hover:shadow-glow transition-all duration-300"
+                >
+                  Add Item
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
 
     </div>
