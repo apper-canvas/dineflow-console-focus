@@ -41,11 +41,14 @@ const MainFeature = () => {
     name: '', 
     category: '', 
     price: '', 
-    image: '' 
+    image: null,
+    imagePreview: ''
   });
+
   const [editingImageItem, setEditingImageItem] = useState(null);
   const [showEditImageModal, setShowEditImageModal] = useState(false);
-  const [editImageData, setEditImageData] = useState({ image: '' });
+  const [editImageData, setEditImageData] = useState({ image: null, imagePreview: '' });
+
 
 
 
@@ -234,13 +237,15 @@ const MainFeature = () => {
   };
 
   const openAddMenuModal = () => {
-    setNewMenuData({ name: '', category: '', price: '', image: '' });
+    setNewMenuData({ name: '', category: '', price: '', image: null, imagePreview: '' });
+
     setShowAddMenuModal(true);
   };
 
   const closeAddMenuModal = () => {
     setShowAddMenuModal(false);
-    setNewMenuData({ name: '', category: '', price: '', image: '' });
+    setNewMenuData({ name: '', category: '', price: '', image: null, imagePreview: '' });
+
   };
 
   const addNewMenuItem = () => {
@@ -259,17 +264,19 @@ const MainFeature = () => {
       return;
     }
     
-    if (!newMenuData.image.trim()) {
-      toast.error('Please enter an image URL!');
+    if (!newMenuData.image) {
+      toast.error('Please select an image!');
       return;
     }
+
     
     const newMenuItem = {
       id: Math.max(...menuItems.map(item => item.id)) + 1,
       name: newMenuData.name.trim(),
       category: newMenuData.category.trim(),
       price: parseFloat(newMenuData.price),
-      image: newMenuData.image.trim()
+      image: newMenuData.imagePreview
+
     };
     
     setMenuItems([...menuItems, newMenuItem]);
@@ -284,33 +291,31 @@ const MainFeature = () => {
 
   const openEditImageModal = (item) => {
     setEditingImageItem(item);
-    setEditImageData({ image: item.image });
+    setEditImageData({ image: null, imagePreview: item.image });
+
     setShowEditImageModal(true);
   };
 
   const closeEditImageModal = () => {
     setShowEditImageModal(false);
     setEditingImageItem(null);
-    setEditImageData({ image: '' });
+    setEditImageData({ image: null, imagePreview: '' });
+
   };
 
   const updateMenuItemImage = () => {
-    if (!editImageData.image.trim()) {
-      toast.error('Please enter a valid image URL!');
+    if (!editImageData.image && !editImageData.imagePreview) {
+      toast.error('Please select an image!');
       return;
     }
     
-    // Basic URL validation
-    try {
-      new URL(editImageData.image);
-    } catch {
-      toast.error('Please enter a valid URL!');
-      return;
-    }
+    const imageToUse = editImageData.imagePreview || editingImageItem.image;
+
     
     setMenuItems(menuItems.map(item =>
       item.id === editingImageItem.id
-        ? { ...item, image: editImageData.image.trim() }
+        ? { ...item, image: imageToUse }
+
         : item
     ));
     
@@ -321,6 +326,34 @@ const MainFeature = () => {
       autoClose: 3000
     });
   };
+
+  const handleImageUpload = (file, isEdit = false) => {
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file!');
+      return;
+    }
+    
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB!');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageUrl = e.target.result;
+      if (isEdit) {
+        setEditImageData({ image: file, imagePreview: imageUrl });
+      } else {
+        setNewMenuData(prev => ({ ...prev, image: file, imagePreview: imageUrl }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
 
 
 
@@ -941,16 +974,32 @@ const MainFeature = () => {
                 
                 <div>
                   <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-                    Image URL
+                    Image
                   </label>
-                  <input
-                    type="url"
-                    value={newMenuData.image}
-                    onChange={(e) => setNewMenuData({ ...newMenuData, image: e.target.value })}
-                    className="w-full py-3 px-4 bg-surface-100 dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Enter image URL"
-                  />
+                  <div className="space-y-3">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(e.target.files[0])}
+                      className="w-full py-3 px-4 bg-surface-100 dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/80"
+                    />
+                    {newMenuData.imagePreview && (
+                      <div>
+                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                          Preview
+                        </label>
+                        <div className="w-full h-32 bg-surface-100 dark:bg-surface-700 rounded-lg overflow-hidden">
+                          <img
+                            src={newMenuData.imagePreview}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
+
               </div>
               
               <div className="flex space-x-3 mt-6">
@@ -1025,39 +1074,34 @@ const MainFeature = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-                    New Image URL
+                    New Image
                   </label>
-                  <input
-                    type="url"
-                    value={editImageData.image}
-                    onChange={(e) => setEditImageData({ ...editImageData, image: e.target.value })}
-                    className="w-full py-3 px-4 bg-surface-100 dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Enter new image URL"
-                  />
-                </div>
-                
-                {editImageData.image && (
-                  <div>
-                    <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
-                      Preview
-                    </label>
-                    <div className="w-full h-32 bg-surface-100 dark:bg-surface-700 rounded-lg overflow-hidden">
-                      <img
-                        src={editImageData.image}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
-                        }}
-                      />
-                      <div className="w-full h-full flex items-center justify-center text-surface-500 dark:text-surface-400 text-sm" style={{ display: 'none' }}>
-                        Invalid image URL
+                  <div className="space-y-3">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(e.target.files[0], true)}
+                      className="w-full py-3 px-4 bg-surface-100 dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/80"
+                    />
+                    {editImageData.imagePreview && (
+                      <div>
+                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                          Preview
+                        </label>
+                        <div className="w-full h-32 bg-surface-100 dark:bg-surface-700 rounded-lg overflow-hidden">
+                          <img
+                            src={editImageData.imagePreview}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
+
+                </div>
+
               
               <div className="flex space-x-3 mt-6">
                 <button
