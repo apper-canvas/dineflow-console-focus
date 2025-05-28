@@ -23,7 +23,8 @@ const MainFeature = () => {
   const [showAddTableModal, setShowAddTableModal] = useState(false);
   const [newTableData, setNewTableData] = useState({ number: '', capacity: 4 });
 
-  const [selectedTable, setSelectedTable] = useState(null);
+  const [openTables, setOpenTables] = useState(new Map()); // Map of table ID to { table, cart, isMinimized }
+
   const [menuItems, setMenuItems] = useState([
 
     { id: 1, name: 'Margherita Pizza', category: 'Pizza', price: 18.99, image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300&h=200&fit=crop&crop=center' },
@@ -60,71 +61,157 @@ const MainFeature = () => {
     { id: 'tables', name: 'Tables', icon: 'Grid3X3' },
   ];
 
-  const addToCart = (item) => {
-    if (!selectedTable) {
-      toast.error('Please select a table first!');
+  const handleTableClick = (table) => {
+    setOpenTables(prev => {
+      const newOpenTables = new Map(prev);
+      if (newOpenTables.has(table.id)) {
+        // Toggle minimize/maximize
+        const tableData = newOpenTables.get(table.id);
+        newOpenTables.set(table.id, {
+          ...tableData,
+          isMinimized: !tableData.isMinimized
+        });
+      } else {
+        // Open new table window
+        newOpenTables.set(table.id, {
+          table,
+          cart: [],
+          isMinimized: false
+        });
+        toast.success(`Opened table ${table.number}`, {
+          icon: '📋',
+          autoClose: 2000
+        });
+      }
+      return newOpenTables;
+    });
+  };
+
+  const addToCartForTable = (tableId, item) => {
+    setOpenTables(prev => {
+      const newOpenTables = new Map(prev);
+      const tableData = newOpenTables.get(tableId);
+      if (!tableData) return prev;
+      
+      const existingItem = tableData.cart.find(cartItem => cartItem.id === item.id);
+      let newCart;
+      
+      if (existingItem) {
+        newCart = tableData.cart.map(cartItem =>
+          cartItem.id === item.id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        );
+      } else {
+        newCart = [...tableData.cart, { ...item, quantity: 1 }];
+      }
+      
+      newOpenTables.set(tableId, {
+        ...tableData,
+        cart: newCart
+      });
+      
+      toast.success(`Added ${item.name} to Table ${tableData.table.number}`, {
+        icon: '🛒',
+        autoClose: 2000
+      });
+      
+      return newOpenTables;
+    });
+  };
+
+  const removeFromCartForTable = (tableId, itemId) => {
+    setOpenTables(prev => {
+      const newOpenTables = new Map(prev);
+      const tableData = newOpenTables.get(tableId);
+      if (!tableData) return prev;
+      
+      const item = tableData.cart.find(cartItem => cartItem.id === itemId);
+      const newCart = tableData.cart.filter(cartItem => cartItem.id !== itemId);
+      
+      newOpenTables.set(tableId, {
+        ...tableData,
+        cart: newCart
+      });
+      
+      toast.info(`Removed ${item?.name} from Table ${tableData.table.number}`, {
+        icon: '🗑️',
+        autoClose: 2000
+      });
+      
+      return newOpenTables;
+    });
+  };
+
+  const updateCartQuantityForTable = (tableId, itemId, newQuantity) => {
+    if (newQuantity <= 0) {
+      removeFromCartForTable(tableId, itemId);
       return;
     }
     
-    const existingItem = cart.find(cartItem => cartItem.id === item.id);
-    if (existingItem) {
-      setCart(cart.map(cartItem =>
-        cartItem.id === item.id
-          ? { ...cartItem, quantity: cartItem.quantity + 1 }
+    setOpenTables(prev => {
+      const newOpenTables = new Map(prev);
+      const tableData = newOpenTables.get(tableId);
+      if (!tableData) return prev;
+      
+      const newCart = tableData.cart.map(cartItem =>
+        cartItem.id === itemId
+          ? { ...cartItem, quantity: newQuantity }
           : cartItem
-      ));
-    } else {
-      setCart([...cart, { ...item, quantity: 1 }]);
-    }
-    toast.success(`Added ${item.name} to cart`, {
-      icon: '🛒',
-      autoClose: 2000
+      );
+      
+      newOpenTables.set(tableId, {
+        ...tableData,
+        cart: newCart
+      });
+      
+      return newOpenTables;
     });
   };
 
-
-  const removeFromCart = (itemId) => {
-    const item = cart.find(cartItem => cartItem.id === itemId);
-    setCart(cart.filter(cartItem => cartItem.id !== itemId));
-    toast.info(`Removed ${item?.name} from cart`, {
-      icon: '🗑️',
-      autoClose: 2000
-    });
+  const getTotalAmountForTable = (tableId) => {
+    const tableData = openTables.get(tableId);
+    if (!tableData) return 0;
+    return tableData.cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
-  const updateCartQuantity = (itemId, newQuantity) => {
-    if (newQuantity <= 0) {
-      removeFromCart(itemId);
-      return;
-    }
-    setCart(cart.map(cartItem =>
-      cartItem.id === itemId
-        ? { ...cartItem, quantity: newQuantity }
-        : cartItem
-    ));
-  };
-
-  const getTotalAmount = () => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-  };
-
-  const processOrder = () => {
-    if (cart.length === 0) {
+  const processOrderForTable = (tableId) => {
+    const tableData = openTables.get(tableId);
+    if (!tableData) return;
+    
+    if (tableData.cart.length === 0) {
       toast.error('Cart is empty!');
       return;
     }
-    if (!selectedTable) {
-      toast.error('Please select a table!');
-      return;
-    }
     
-    setCart([]);
-    setSelectedTable(null);
-    toast.success('Order processed successfully!', {
+    setOpenTables(prev => {
+      const newOpenTables = new Map(prev);
+      newOpenTables.delete(tableId);
+      return newOpenTables;
+    });
+    
+    toast.success(`Order processed successfully for Table ${tableData.table.number}!`, {
       icon: '✅',
       autoClose: 3000
     });
   };
+
+  const closeTableWindow = (tableId) => {
+    const tableData = openTables.get(tableId);
+    if (!tableData) return;
+    
+    setOpenTables(prev => {
+      const newOpenTables = new Map(prev);
+      newOpenTables.delete(tableId);
+      return newOpenTables;
+    });
+    
+    toast.info(`Closed Table ${tableData.table.number}`, {
+      icon: '❌',
+      autoClose: 2000
+    });
+  };
+
 
   const updateInventoryStock = (itemId, newQuantity) => {
     setInventory(inventory.map(item => {
@@ -243,14 +330,10 @@ const MainFeature = () => {
   };
 
   const openAddMenuModal = () => {
-    if (!selectedTable) {
-      toast.error('Please select a table first!');
-      return;
-    }
-    
     setNewMenuData({ name: '', category: '', price: '', image: null, imagePreview: '' });
     setShowAddMenuModal(true);
   };
+
 
 
   const closeAddMenuModal = () => {
@@ -404,188 +487,235 @@ const MainFeature = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -100 }}
             transition={{ duration: 0.5 }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8"
+            className="space-y-6"
           >
-            {/* Menu Items */}
-            <div className="lg:col-span-2">
-              <div className="glass-effect rounded-2xl p-6 shadow-soft">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl sm:text-2xl font-bold text-surface-900 dark:text-surface-100 flex items-center">
-                    <ApperIcon name="MenuBook" className="w-6 h-6 mr-3 text-primary" />
-                    Menu Items
-                  </h2>
+            {/* Table Selection */}
+            <div className="glass-effect rounded-2xl p-6 shadow-soft">
+              <h3 className="text-lg font-bold text-surface-900 dark:text-surface-100 mb-4 flex items-center">
+                <ApperIcon name="MapPin" className="w-5 h-5 mr-2 text-primary" />
+                Select Tables
+              </h3>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {tables.filter(table => table.status === 'available' || openTables.has(table.id)).map((table) => (
                   <button
-                    onClick={openAddMenuModal}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-primary to-accent text-white rounded-xl hover:shadow-glow transition-all duration-300"
+                    key={table.id}
+                    onClick={() => handleTableClick(table)}
+                    className={`p-3 rounded-lg border-2 transition-all duration-300 relative ${
+                      openTables.has(table.id)
+                        ? openTables.get(table.id).isMinimized
+                          ? 'border-accent bg-accent/20'
+                          : 'border-primary bg-primary/10'
+                        : 'border-surface-300 dark:border-surface-600 hover:border-primary/50'
+                    }`}
                   >
-                    <ApperIcon name="Plus" className="w-4 h-4" />
-                    <span className="text-sm font-medium">Add Menu Item</span>
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-surface-900 dark:text-surface-100">
+                        Table {table.number}
+                      </div>
+                      <div className="text-xs text-surface-600 dark:text-surface-400">
+                        {table.capacity} seats
+                      </div>
+                      {openTables.has(table.id) && (
+                        <div className="text-xs mt-1">
+                          <span className={`px-2 py-1 rounded-full text-white ${
+                            openTables.get(table.id).isMinimized ? 'bg-accent' : 'bg-primary'
+                          }`}>
+                            {openTables.get(table.id).isMinimized ? 'Minimized' : 'Open'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {menuItems.map((item) => (
-                    <motion.div
-                      key={item.id}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="gradient-border rounded-xl p-4 cursor-pointer group"
-                      onClick={() => addToCart(item)}
-                    >
-                      <div className="aspect-w-16 aspect-h-10 mb-3">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <h3 className="font-semibold text-surface-900 dark:text-surface-100 mb-1">
-                        {item.name}
-                      </h3>
-                      <p className="text-sm text-surface-600 dark:text-surface-400 mb-2">
-                        {item.category}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-lg font-bold text-primary">
-                          ₹{item.price}
-                        </span>
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openEditImageModal(item);
-                            }}
-                            className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-blue-600"
-                          >
-                            <ApperIcon name="Image" className="w-4 h-4 text-white" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openEditPriceModal(item);
-                            }}
-                            className="w-8 h-8 bg-accent rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-accent/80"
-                          >
-                            <ApperIcon name="Edit" className="w-4 h-4 text-white" />
-                          </button>
-                          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <ApperIcon name="Plus" className="w-4 h-4 text-white" />
-                          </div>
-                        </div>
-
-                      </div>
-
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Cart & Order Processing */}
-            <div className="space-y-6">
-              {/* Table Selection */}
-              <div className="glass-effect rounded-2xl p-6 shadow-soft">
-                <h3 className="text-lg font-bold text-surface-900 dark:text-surface-100 mb-4 flex items-center">
-                  <ApperIcon name="MapPin" className="w-5 h-5 mr-2 text-primary" />
-                  Select Table
-                </h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {tables.filter(table => table.status === 'available').map((table) => (
-                    <button
-                      key={table.id}
-                      onClick={() => setSelectedTable(table)}
-                      className={`p-3 rounded-lg border-2 transition-all duration-300 ${
-                        selectedTable?.id === table.id
-                          ? 'border-primary bg-primary/10'
-                          : 'border-surface-300 dark:border-surface-600 hover:border-primary/50'
-                      }`}
-                    >
-                      <div className="text-center">
-                        <div className="text-sm font-medium text-surface-900 dark:text-surface-100">
-                          Table {table.number}
-                        </div>
-                        <div className="text-xs text-surface-600 dark:text-surface-400">
-                          {table.capacity} seats
-                        </div>
-                      </div>
-                    </button>
-                  ))}
+                ))}
                 <button
                   onClick={openAddTableModal}
-                  className="col-span-3 p-3 rounded-lg border-2 border-dashed border-primary/50 hover:border-primary transition-all duration-300 bg-primary/5 hover:bg-primary/10 group"
+                  className="col-span-3 sm:col-span-4 md:col-span-6 p-3 rounded-lg border-2 border-dashed border-primary/50 hover:border-primary transition-all duration-300 bg-primary/5 hover:bg-primary/10 group"
                 >
                   <div className="flex items-center justify-center space-x-2 text-primary">
                     <ApperIcon name="Plus" className="w-5 h-5" />
                     <span className="text-sm font-medium">Add Table</span>
                   </div>
                 </button>
-
-                </div>
-              </div>
-
-              {/* Cart */}
-              <div className="glass-effect rounded-2xl p-6 shadow-soft">
-                <h3 className="text-lg font-bold text-surface-900 dark:text-surface-100 mb-4 flex items-center">
-                  <ApperIcon name="ShoppingCart" className="w-5 h-5 mr-2 text-primary" />
-                  Current Order
-                </h3>
-                <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {cart.length === 0 ? (
-                    <p className="text-surface-600 dark:text-surface-400 text-center py-8">
-                      Cart is empty
-                    </p>
-                  ) : (
-                    cart.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between p-3 bg-surface-50 dark:bg-surface-700/50 rounded-lg">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-surface-900 dark:text-surface-100 text-sm">
-                            {item.name}
-                          </h4>
-                          <p className="text-primary font-semibold text-sm">
-                            ₹{item.price}
-
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
-                            className="w-6 h-6 rounded-full bg-surface-200 dark:bg-surface-600 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
-                          >
-                            <ApperIcon name="Minus" className="w-3 h-3" />
-                          </button>
-                          <span className="w-8 text-center font-medium text-surface-900 dark:text-surface-100">
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
-                            className="w-6 h-6 rounded-full bg-surface-200 dark:bg-surface-600 flex items-center justify-center hover:bg-green-500 hover:text-white transition-colors"
-                          >
-                            <ApperIcon name="Plus" className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                
-                {cart.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-surface-200 dark:border-surface-600">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-lg font-bold text-surface-900 dark:text-surface-100">Total:</span>
-                      <span className="text-xl font-bold text-primary">₹{getTotalAmount().toFixed(2)}</span>
-
-                    </div>
-                    <button
-                      onClick={processOrder}
-                      className="w-full py-3 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-medium hover:shadow-glow transition-all duration-300"
-                    >
-                      Process Order
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
+
+            {/* Open Table Windows */}
+            <div className="space-y-6">
+              {Array.from(openTables.entries()).map(([tableId, tableData]) => {
+                if (tableData.isMinimized) return null;
+                
+                return (
+                  <motion.div
+                    key={tableId}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="glass-effect rounded-2xl p-6 shadow-soft border-2 border-primary/20"
+                  >
+                    {/* Table Window Header */}
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl font-bold text-surface-900 dark:text-surface-100 flex items-center">
+                        <ApperIcon name="Users" className="w-6 h-6 mr-3 text-primary" />
+                        Table {tableData.table.number} - {tableData.table.capacity} seats
+                      </h2>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handleTableClick(tableData.table)}
+                          className="px-3 py-1 bg-accent text-white rounded-lg hover:bg-accent/80 transition-colors text-sm"
+                        >
+                          Minimize
+                        </button>
+                        <button
+                          onClick={() => closeTableWindow(tableId)}
+                          className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                      {/* Menu Items */}
+                      <div className="lg:col-span-2">
+                        <div className="mb-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-surface-900 dark:text-surface-100 flex items-center">
+                              <ApperIcon name="MenuBook" className="w-5 h-5 mr-2 text-primary" />
+                              Menu Items
+                            </h3>
+                            <button
+                              onClick={openAddMenuModal}
+                              className="flex items-center space-x-2 px-3 py-1 bg-gradient-to-r from-primary to-accent text-white rounded-lg hover:shadow-glow transition-all duration-300 text-sm"
+                            >
+                              <ApperIcon name="Plus" className="w-4 h-4" />
+                              <span>Add Item</span>
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                            {menuItems.map((item) => (
+                              <motion.div
+                                key={item.id}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className="gradient-border rounded-xl p-4 cursor-pointer group"
+                                onClick={() => addToCartForTable(tableId, item)}
+                              >
+                                <div className="aspect-w-16 aspect-h-10 mb-3">
+                                  <img
+                                    src={item.image}
+                                    alt={item.name}
+                                    className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                                  />
+                                </div>
+                                <h4 className="font-semibold text-surface-900 dark:text-surface-100 mb-1">
+                                  {item.name}
+                                </h4>
+                                <p className="text-sm text-surface-600 dark:text-surface-400 mb-2">
+                                  {item.category}
+                                </p>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-lg font-bold text-primary">
+                                    ₹{item.price}
+                                  </span>
+                                  <div className="flex items-center space-x-2">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openEditImageModal(item);
+                                      }}
+                                      className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-blue-600"
+                                    >
+                                      <ApperIcon name="Image" className="w-4 h-4 text-white" />
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openEditPriceModal(item);
+                                      }}
+                                      className="w-8 h-8 bg-accent rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-accent/80"
+                                    >
+                                      <ApperIcon name="Edit" className="w-4 h-4 text-white" />
+                                    </button>
+                                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                      <ApperIcon name="Plus" className="w-4 h-4 text-white" />
+                                    </div>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Cart */}
+                      <div>
+                        <div className="mb-4">
+                          <h3 className="text-lg font-bold text-surface-900 dark:text-surface-100 mb-4 flex items-center">
+                            <ApperIcon name="ShoppingCart" className="w-5 h-5 mr-2 text-primary" />
+                            Current Order
+                          </h3>
+                          <div className="space-y-3 max-h-64 overflow-y-auto">
+                            {tableData.cart.length === 0 ? (
+                              <p className="text-surface-600 dark:text-surface-400 text-center py-8">
+                                Cart is empty
+                              </p>
+                            ) : (
+                              tableData.cart.map((item) => (
+                                <div key={item.id} className="flex items-center justify-between p-3 bg-surface-50 dark:bg-surface-700/50 rounded-lg">
+                                  <div className="flex-1">
+                                    <h4 className="font-medium text-surface-900 dark:text-surface-100 text-sm">
+                                      {item.name}
+                                    </h4>
+                                    <p className="text-primary font-semibold text-sm">
+                                      ₹{item.price}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <button
+                                      onClick={() => updateCartQuantityForTable(tableId, item.id, item.quantity - 1)}
+                                      className="w-6 h-6 rounded-full bg-surface-200 dark:bg-surface-600 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
+                                    >
+                                      <ApperIcon name="Minus" className="w-3 h-3" />
+                                    </button>
+                                    <span className="w-8 text-center font-medium text-surface-900 dark:text-surface-100">
+                                      {item.quantity}
+                                    </span>
+                                    <button
+                                      onClick={() => updateCartQuantityForTable(tableId, item.id, item.quantity + 1)}
+                                      className="w-6 h-6 rounded-full bg-surface-200 dark:bg-surface-600 flex items-center justify-center hover:bg-green-500 hover:text-white transition-colors"
+                                    >
+                                      <ApperIcon name="Plus" className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                          
+                          {tableData.cart.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-surface-200 dark:border-surface-600">
+                              <div className="flex justify-between items-center mb-4">
+                                <span className="text-lg font-bold text-surface-900 dark:text-surface-100">Total:</span>
+                                <span className="text-xl font-bold text-primary">₹{getTotalAmountForTable(tableId).toFixed(2)}</span>
+                              </div>
+                              <button
+                                onClick={() => processOrderForTable(tableId)}
+                                className="w-full py-3 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-medium hover:shadow-glow transition-all duration-300"
+                              >
+                                Process Order
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </motion.div>
+        )}
+
         )}
 
         {activeTab === 'inventory' && (
