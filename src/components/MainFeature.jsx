@@ -24,7 +24,8 @@ const MainFeature = () => {
   const [newTableData, setNewTableData] = useState({ number: '', capacity: 4 });
 
   const [selectedTable, setSelectedTable] = useState(null);
-  const [menuItems] = useState([
+  const [menuItems, setMenuItems] = useState([
+
     { id: 1, name: 'Margherita Pizza', category: 'Pizza', price: 18.99, image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300&h=200&fit=crop&crop=center' },
     { id: 2, name: 'Caesar Salad', category: 'Salads', price: 12.99, image: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=300&h=200&fit=crop&crop=center' },
     { id: 3, name: 'Grilled Salmon', category: 'Main Course', price: 24.99, image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=300&h=200&fit=crop&crop=center' },
@@ -32,6 +33,11 @@ const MainFeature = () => {
     { id: 5, name: 'Beef Burger', category: 'Burgers', price: 16.99, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&h=200&fit=crop&crop=center' },
     { id: 6, name: 'Pasta Carbonara', category: 'Pasta', price: 19.99, image: 'https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?w=300&h=200&fit=crop&crop=center' },
   ]);
+  const [editingPriceItem, setEditingPriceItem] = useState(null);
+  const [showEditPriceModal, setShowEditPriceModal] = useState(false);
+  const [editPriceData, setEditPriceData] = useState({ price: '' });
+
+
 
   const tabs = [
     { id: 'pos', name: 'POS System', icon: 'ShoppingCart' },
@@ -181,6 +187,41 @@ const MainFeature = () => {
     setNewTableData({ number: '', capacity: 4 });
   };
 
+  const openEditPriceModal = (item) => {
+    setEditingPriceItem(item);
+    setEditPriceData({ price: item.price.toString() });
+    setShowEditPriceModal(true);
+  };
+
+  const closeEditPriceModal = () => {
+    setShowEditPriceModal(false);
+    setEditingPriceItem(null);
+    setEditPriceData({ price: '' });
+  };
+
+  const updateMenuItemPrice = () => {
+    if (!editPriceData.price || parseFloat(editPriceData.price) <= 0) {
+      toast.error('Please enter a valid price!');
+      return;
+    }
+    
+    const newPrice = parseFloat(editPriceData.price);
+    
+    setMenuItems(menuItems.map(item =>
+      item.id === editingPriceItem.id
+        ? { ...item, price: newPrice }
+        : item
+    ));
+    
+    closeEditPriceModal();
+    
+    toast.success(`Updated price for ${editingPriceItem.name} to ₹${newPrice.toFixed(2)}`, {
+      icon: '💰',
+      autoClose: 3000
+    });
+  };
+
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -251,12 +292,23 @@ const MainFeature = () => {
                       <div className="flex items-center justify-between">
                         <span className="text-lg font-bold text-primary">
                           ₹{item.price}
-
                         </span>
-                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <ApperIcon name="Plus" className="w-4 h-4 text-white" />
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditPriceModal(item);
+                            }}
+                            className="w-8 h-8 bg-accent rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-accent/80"
+                          >
+                            <ApperIcon name="Edit" className="w-4 h-4 text-white" />
+                          </button>
+                          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <ApperIcon name="Plus" className="w-4 h-4 text-white" />
+                          </div>
                         </div>
                       </div>
+
                     </motion.div>
                   ))}
                 </div>
@@ -603,6 +655,96 @@ const MainFeature = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Edit Price Modal */}
+      <AnimatePresence>
+        {showEditPriceModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={closeEditPriceModal}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="glass-effect rounded-2xl p-6 w-full max-w-md shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-surface-900 dark:text-surface-100 flex items-center">
+                  <ApperIcon name="Edit" className="w-6 h-6 mr-3 text-primary" />
+                  Edit Price
+                </h3>
+                <button
+                  onClick={closeEditPriceModal}
+                  className="w-8 h-8 rounded-full bg-surface-200 dark:bg-surface-700 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
+                >
+                  <ApperIcon name="X" className="w-4 h-4" />
+                </button>
+              </div>
+              
+              {editingPriceItem && (
+                <div className="mb-4">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <img
+                      src={editingPriceItem.image}
+                      alt={editingPriceItem.name}
+                      className="w-16 h-16 object-cover rounded-lg"
+                    />
+                    <div>
+                      <h4 className="font-semibold text-surface-900 dark:text-surface-100">
+                        {editingPriceItem.name}
+                      </h4>
+                      <p className="text-sm text-surface-600 dark:text-surface-400">
+                        {editingPriceItem.category}
+                      </p>
+                      <p className="text-sm text-primary font-medium">
+                        Current: ₹{editingPriceItem.price}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                    New Price (₹)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={editPriceData.price}
+                    onChange={(e) => setEditPriceData({ ...editPriceData, price: e.target.value })}
+                    className="w-full py-3 px-4 bg-surface-100 dark:bg-surface-700 border border-surface-300 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter new price"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex space-x-3 mt-6">
+                <button
+                  onClick={closeEditPriceModal}
+                  className="flex-1 py-3 px-4 bg-surface-200 dark:bg-surface-700 text-surface-700 dark:text-surface-300 rounded-xl font-medium hover:bg-surface-300 dark:hover:bg-surface-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={updateMenuItemPrice}
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-medium hover:shadow-glow transition-all duration-300"
+                >
+                  Update Price
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
     </div>
   );
