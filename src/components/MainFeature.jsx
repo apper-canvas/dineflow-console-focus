@@ -86,6 +86,9 @@ const MainFeature = () => {
           isMinimized: !tableData.isMinimized
         });
       } else {
+        // Close all other open tables first (ensure only one table open at a time)
+        newOpenTables.clear();
+        
         // Open new table window
         newOpenTables.set(table.id, {
           table,
@@ -100,6 +103,7 @@ const MainFeature = () => {
       return newOpenTables;
     });
   };
+
 
 
   const addToCartForTable = (tableId, item) => {
@@ -121,12 +125,16 @@ const MainFeature = () => {
         newCart = [...tableData.cart, { ...item, quantity: 1 }];
       }
       
+      // Auto-minimize table to "running" state when first item is added
+      const shouldAutoMinimize = tableData.cart.length === 0 && newCart.length > 0;
+      
       newOpenTables.set(tableId, {
         ...tableData,
-        cart: newCart
+        cart: newCart,
+        isMinimized: shouldAutoMinimize ? true : tableData.isMinimized
       });
       
-      toast.success(`Added ${item.name} to Table ${tableData.table.number}`, {
+      toast.success(`Added ${item.name} to Table ${tableData.table.number}${shouldAutoMinimize ? ' - Table moved to running' : ''}`, {
         icon: '🛒',
         autoClose: 2000
       });
@@ -134,6 +142,7 @@ const MainFeature = () => {
       return newOpenTables;
     });
   };
+
 
   const removeFromCartForTable = (tableId, itemId) => {
     setOpenTables(prev => {
@@ -598,12 +607,13 @@ const MainFeature = () => {
                       {openTables.has(table.id) && (
                         <div className="text-xs mt-1">
                           <span className={`px-2 py-1 rounded-full text-white ${
-                            openTables.get(table.id).isMinimized ? 'bg-accent' : 'bg-primary'
+                            openTables.get(table.id).isMinimized && openTables.get(table.id).cart.length > 0 ? 'bg-accent' : 'bg-primary'
                           }`}>
-                            {openTables.get(table.id).isMinimized ? 'Running' : 'Open'}
+                            {openTables.get(table.id).isMinimized && openTables.get(table.id).cart.length > 0 ? 'Running' : 'Open'}
                           </span>
                         </div>
                       )}
+
                     </div>
                     {/* Delete button for POS select table section */}
                     {!openTables.has(table.id) && (
