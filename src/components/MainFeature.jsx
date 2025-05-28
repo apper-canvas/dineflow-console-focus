@@ -409,10 +409,8 @@ const MainFeature = () => {
   const closeAddMenuModal = () => {
     setShowAddMenuModal(false);
     setNewMenuData({ name: '', category: '', price: '', image: null, imagePreview: '' });
-
   };
 
-  };
 
   const addNewMenuItem = () => {
     if (!newMenuData.name.trim()) {
@@ -466,10 +464,8 @@ const MainFeature = () => {
     setShowEditImageModal(false);
     setEditingImageItem(null);
     setEditImageData({ image: null, imagePreview: '' });
-
   };
 
-  };
 
   const updateMenuItemImage = () => {
     if (!editImageData.image && !editImageData.imagePreview) {
@@ -574,7 +570,7 @@ const MainFeature = () => {
                   <button
                     key={table.id}
                     onClick={() => handleTableClick(table)}
-                    className={`p-3 rounded-lg border-2 transition-all duration-300 relative ${
+                    className={`p-3 rounded-lg border-2 transition-all duration-300 relative group ${
                       openTables.has(table.id)
                         ? openTables.get(table.id).isMinimized
                           ? 'border-accent bg-accent/20'
@@ -595,7 +591,6 @@ const MainFeature = () => {
                             openTables.get(table.id).isMinimized ? 'bg-accent' : 'bg-primary'
                           }`}>
                             {openTables.get(table.id).isMinimized ? 'Running' : 'Open'}
-
                           </span>
                         </div>
                       )}
@@ -612,18 +607,20 @@ const MainFeature = () => {
                         <ApperIcon name="X" className="w-3 h-3 text-white" />
                       </button>
                     )}
-
                   </button>
+                ))}
                 <button
                   onClick={openAddTableModal}
-                  className="col-span-3 sm:col-span-4 md:col-span-6 p-3 rounded-lg border-2 border-dashed border-primary/50 hover:border-primary transition-all duration-300 bg-primary/5 hover:bg-primary/10 group"
+                  className="p-3 rounded-lg border-2 border-dashed border-primary/50 hover:border-primary transition-all duration-300 bg-primary/5 hover:bg-primary/10 group"
                 >
                   <div className="flex items-center justify-center space-x-2 text-primary">
                     <ApperIcon name="Plus" className="w-5 h-5" />
                     <span className="text-sm font-medium">Add Table</span>
                   </div>
                 </button>
+
               </div>
+
             </div>
 
             {/* Open Table Windows */}
@@ -1446,6 +1443,8 @@ const MainFeature = () => {
 
     </div>
   );
+}
+
 };
 
 export default MainFeature;
