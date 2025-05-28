@@ -520,7 +520,8 @@ const MainFeature = () => {
                           <span className={`px-2 py-1 rounded-full text-white ${
                             openTables.get(table.id).isMinimized ? 'bg-accent' : 'bg-primary'
                           }`}>
-                            {openTables.get(table.id).isMinimized ? 'Minimized' : 'Open'}
+                            {openTables.get(table.id).isMinimized ? 'Running' : 'Open'}
+
                           </span>
                         </div>
                       )}
