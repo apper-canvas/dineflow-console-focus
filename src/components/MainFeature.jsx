@@ -1342,6 +1342,8 @@ const MainFeature = () => {
                   </div>
                 </div>
 
+              </div>
+
 
               
               <div className="flex space-x-3 mt-6">
@@ -1445,6 +1447,5 @@ const MainFeature = () => {
   );
 }
 
-};
 
 export default MainFeature;
