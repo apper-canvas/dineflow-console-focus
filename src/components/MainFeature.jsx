@@ -577,10 +577,10 @@ const MainFeature = () => {
               </h3>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 {tables.filter(table => table.status === 'available' || openTables.has(table.id)).map((table) => (
-                  <button
+                  <div
                     key={table.id}
                     onClick={() => handleTableClick(table)}
-                    className={`p-3 rounded-lg border-2 transition-all duration-300 relative group ${
+                    className={`p-3 rounded-lg border-2 transition-all duration-300 relative group cursor-pointer ${
                       openTables.has(table.id)
                         ? openTables.get(table.id).isMinimized
                           ? 'border-accent bg-accent/20'
@@ -617,7 +617,8 @@ const MainFeature = () => {
                         <ApperIcon name="X" className="w-3 h-3 text-white" />
                       </button>
                     )}
-                  </button>
+                  </div>
+
                 ))}
                 <button
                   onClick={openAddTableModal}
