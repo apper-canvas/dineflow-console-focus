@@ -21,7 +21,8 @@ const Home = ({ darkMode, setDarkMode }) => {
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  DineFlow
+                  Fork & Folly
+
                 </h1>
                 <p className="text-xs sm:text-sm text-surface-600 dark:text-surface-400 hidden sm:block">
                   Restaurant Management
@@ -69,7 +70,8 @@ const Home = ({ darkMode, setDarkMode }) => {
                   <ApperIcon name="ChefHat" className="w-5 h-5 text-white" />
                 </div>
                 <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  DineFlow
+                  Fork & Folly
+
                 </span>
               </div>
               <p className="text-surface-600 dark:text-surface-400 text-sm leading-relaxed">
@@ -122,7 +124,8 @@ const Home = ({ darkMode, setDarkMode }) => {
           
           <div className="border-t border-surface-200 dark:border-surface-700 mt-8 pt-8 text-center">
             <p className="text-sm text-surface-600 dark:text-surface-400">
-              © 2024 DineFlow. All rights reserved. Powered by innovation.
+              © 2024 Fork & Folly. All rights reserved. Powered by innovation.
+
             </p>
           </div>
         </div>
