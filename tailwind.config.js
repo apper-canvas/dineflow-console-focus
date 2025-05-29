@@ -51,6 +51,10 @@ export default {
         'bounce-gentle': 'bounce 2s ease-in-out infinite',
         'fade-in': 'fadeIn 0.5s ease-in-out',
         'slide-up': 'slideUp 0.3s ease-out'
+      },
+      backgroundImage: {
+        'food-pattern': "url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')"
+
       }
     }
   },
