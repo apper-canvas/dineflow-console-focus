@@ -10,7 +10,7 @@ function App() {
 
   return (
     <div className={darkMode ? 'dark' : ''}>
-      <div className="min-h-screen bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800 transition-colors duration-300">
+      <div className="min-h-screen bg-surface-900 dark:bg-surface-900 transition-colors duration-300">
         <Routes>
           <Route path="/" element={<Home darkMode={darkMode} setDarkMode={setDarkMode} />} />
           <Route path="*" element={<NotFound />} />

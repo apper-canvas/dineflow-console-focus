@@ -8,27 +8,27 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#FF6B35',
-          light: '#FF8A65',
-          dark: '#E53E3E'
+          DEFAULT: '#00D4FF',
+          light: '#4DE6FF',
+          dark: '#0099CC'
         },
         secondary: {
-          DEFAULT: '#2D3748',
-          light: '#4A5568',
-          dark: '#1A202C'
+          DEFAULT: '#39FF14',
+          light: '#66FF4D',
+          dark: '#2BCC0F'
         },
-        accent: '#F7931E',
+        accent: '#FF1493',
         surface: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a'
+          50: '#0a0a0a',
+          100: '#111111',
+          200: '#1a1a1a',
+          300: '#262626',
+          400: '#333333',
+          500: '#404040',
+          600: '#525252',
+          700: '#666666',
+          800: '#1a1a1a',
+          900: '#000000'
         }
       },
       fontFamily: {
@@ -36,11 +36,11 @@ export default {
         heading: ['Inter', 'ui-sans-serif', 'system-ui']
       },
       boxShadow: {
-        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
-        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
-        'neu-light': '5px 5px 15px #d1d9e6, -5px -5px 15px #ffffff',
-        'neu-dark': '5px 5px 15px rgba(0, 0, 0, 0.3), -5px -5px 15px rgba(255, 255, 255, 0.05)',
-        'glow': '0 0 20px rgba(255, 107, 53, 0.3)'
+        'soft': '0 2px 15px -3px rgba(0, 212, 255, 0.2), 0 10px 20px -2px rgba(0, 212, 255, 0.1)',
+        'card': '0 4px 6px -1px rgba(0, 212, 255, 0.3), 0 2px 4px -2px rgba(0, 212, 255, 0.1)',
+        'neu-light': '5px 5px 15px #00D4FF, -5px -5px 15px #39FF14',
+        'neu-dark': '5px 5px 15px rgba(0, 212, 255, 0.5), -5px -5px 15px rgba(57, 255, 20, 0.3)',
+        'glow': '0 0 20px rgba(0, 212, 255, 0.6), 0 0 40px rgba(0, 212, 255, 0.4)'
       },
       borderRadius: {
         'xl': '0.75rem',
