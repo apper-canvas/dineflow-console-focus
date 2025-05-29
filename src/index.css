@@ -115,17 +115,20 @@
   width: 8px;
 }
 
-:::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
+
   background: #000000;
   border-radius: 10px;
 }
 
-:::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
+
   background: linear-gradient(45deg, #00D4FF, #FF1493);
   border-radius: 10px;
 }
 
-:::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb:hover {
+
   background: linear-gradient(45deg, #39FF14, #00D4FF);
 }
 
@@ -143,12 +146,6 @@
 
 .Toastify__progress-bar {
   background: linear-gradient(90deg, #00D4FF, #FF1493);
-}
-
-/* Toast customization */
-.Toastify__toast {
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 
@@ -180,7 +177,6 @@ input:focus, textarea:focus, select:focus {
   background: #00D4FF;
   box-shadow: 0 0 10px #00D4FF;
   animation-timing-function: cubic-bezier(0, 1, 1, 0);
-}
 }
 
 .loading-dots div:nth-child(1) {
